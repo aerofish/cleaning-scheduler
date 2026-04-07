@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>保洁调度系统</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    .tab:hover, .tab.active {
+      background: white;
+      color: #667eea;
+    }
+    .panel {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .panel.active { display: block; }
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: 500;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+    .btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .btn-danger { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+    .btn-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    th {
+      background: #f5f5f5;
+      font-weight: 600;
+    }
+    tr:hover { background: #fafafa; }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-pending { background: #fff3e0; color: #e65100; }
+    .status-assigned { background: #e3f2fd; color: #1565c0; }
+    .status-completed { background: #e8f5e9; color: #2e7d32; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .stat-label {
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+    .actions { display: flex; gap: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 保洁调度系统</h1>
+    
+    <div class="tabs">
+      <button class="tab active" onclick="showPanel('dashboard')">📊 仪表盘</button>
+      <button class="tab" onclick="showPanel('cleaners')">👨‍🔧 保洁员管理</button>
+      <button class="tab" onclick="showPanel('orders')">📋 订单管理</button>
+      <button class="tab" onclick="showPanel('assign')">🎯 订单分配</button>
+    </div>
+
+    <!-- 仪表盘 -->
+    <div id="dashboard" class="panel active">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-cleaners">0</div>
+          <div class="stat-label">保洁员总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-pending">0</div>
+          <div class="stat-label">待分配订单</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-assigned">0</div>
+          <div class="stat-label">已分配订单</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-completed">0</div>
+          <div class="stat-label">已完成订单</div>
+        </div>
+      </div>
+      <h3>最近订单</h3>
+      <table id="recent-orders-table">
+        <thead><tr><th>客户</th><th>地址</th><th>时间</th><th>状态</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 保洁员管理 -->
+    <div id="cleaners" class="panel">
+      <h3>添加保洁员</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>姓名</label>
+          <input type="text" id="cleaner-name" placeholder="保洁员姓名">
+        </div>
+        <div class="form-group">
+          <label>电话</label>
+          <input type="tel" id="cleaner-phone" placeholder="联系电话">
+        </div>
+        <div class="form-group">
+          <label>技能</label>
+          <select id="cleaner-skill">
+            <option value="家庭保洁">家庭保洁</option>
+            <option value="深度清洁">深度清洁</option>
+            <option value="空调清洗">空调清洗</option>
+            <option value="油烟机清洗">油烟机清洗</option>
+            <option value="开荒保洁">开荒保洁</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 0;">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="addCleaner()">添加</button>
+        </div>
+      </div>
+      
+      <h3 style="margin-top: 30px;">保洁员列表</h3>
+      <table id="cleaners-table">
+        <thead><tr><th>姓名</th><th>电话</th><th>技能</th><th>加入时间</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 订单管理 -->
+    <div id="orders" class="panel">
+      <h3>新建订单</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>客户姓名</label>
+          <input type="text" id="order-customer" placeholder="客户姓名">
+        </div>
+        <div class="form-group">
+          <label>联系电话</label>
+          <input type="tel" id="order-phone" placeholder="联系电话">
+        </div>
+        <div class="form-group">
+          <label>服务地址</label>
+          <input type="text" id="order-address" placeholder="详细地址">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>服务类型</label>
+          <select id="order-type">
+            <option value="家庭保洁">家庭保洁</option>
+            <option value="深度清洁">深度清洁</option>
+            <option value="空调清洗">空调清洗</option>
+            <option value="油烟机清洗">油烟机清洗</option>
+            <option value="开荒保洁">开荒保洁</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>预约时间</label>
+          <input type="datetime-local" id="order-time">
+        </div>
+        <div class="form-group">
+          <label>预计时长(小时)</label>
+          <input type="number" id="order-duration" value="2" min="1" max="8">
+        </div>
+        <div class="form-group" style="flex: 0;">
+          <label>&nbsp;</label>
+          <button class="btn" onclick="addOrder()">创建订单</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>备注</label>
+          <textarea id="order-note" rows="2" placeholder="特殊要求..."></textarea>
+        </div>
+      </div>
+      
+      <h3 style="margin-top: 30px;">订单列表</h3>
+      <table id="orders-table">
+        <thead><tr><th>客户</th><th>电话</th><th>地址</th><th>服务类型</th><th>预约时间</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 订单分配 -->
+    <div id="assign" class="panel">
+      <h3>待分配订单</h3>
+      <table id="assign-table">
+        <thead><tr><th>订单号</th><th>客户</th><th>服务类型</th><th>预约时间</th><th>分配保洁员</th><th>操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    let data = { cleaners: [], orders: [], assignments: [] };
+
+    async function loadData() {
+      data = await ipcRenderer.invoke('get-data');
+      refreshAll();
+    }
+
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '-';
+      return new Date(iso).toLocaleString('zh-CN');
+    }
+
+    function statusBadge(status) {
+      const labels = { pending: '待分配', assigned: '已分配', completed: '已完成' };
+      return `<span class="status-badge status-${status}">${labels[status] || status}</span>`;
+    }
+
+    function refreshAll() {
+      refreshDashboard();
+      refreshCleaners();
+      refreshOrders();
+      refreshAssign();
+    }
+
+    function refreshDashboard() {
+      document.getElementById('stat-cleaners').textContent = data.cleaners.length;
+      document.getElementById('stat-pending').textContent = data.orders.filter(o => o.status === 'pending').length;
+      document.getElementById('stat-assigned').textContent = data.orders.filter(o => o.status === 'assigned').length;
+      document.getElementById('stat-completed').textContent = data.orders.filter(o => o.status === 'completed').length;
+      
+      const recent = data.orders.slice(-5).reverse();
+      const tbody = document.querySelector('#recent-orders-table tbody');
+      tbody.innerHTML = recent.map(o => `
+        <tr><td>${o.customer}</td><td>${o.address}</td><td>${formatDate(o.time)}</td><td>${statusBadge(o.status)}</td></tr>
+      `).join('');
+    }
+
+    function refreshCleaners() {
+      const tbody = document.querySelector('#cleaners-table tbody');
+      tbody.innerHTML = data.cleaners.map(c => `
+        <tr>
+          <td>${c.name}</td><td>${c.phone}</td><td>${c.skill}</td>
+          <td>${formatDate(c.createdAt)}</td>
+          <td class="actions">
+            <button class="btn-small btn-danger" onclick="deleteCleaner('${c.id}')">删除</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function refreshOrders() {
+      const tbody = document.querySelector('#orders-table tbody');
+      tbody.innerHTML = data.orders.map(o => `
+        <tr>
+          <td>${o.customer}</td><td>${o.phone}</td><td>${o.address}</td>
+          <td>${o.type}</td><td>${formatDate(o.time)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td class="actions">
+            ${o.status === 'assigned' ? `<button class="btn-small btn-success" onclick="completeOrder('${o.id}')">完成</button>` : ''}
+            <button class="btn-small btn-danger" onclick="deleteOrder('${o.id}')">删除</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function refreshAssign() {
+      const pending = data.orders.filter(o => o.status === 'pending');
+      const tbody = document.querySelector('#assign-table tbody');
+      tbody.innerHTML = pending.map(o => `
+        <tr>
+          <td>${o.id.slice(-6)}</td><td>${o.customer}</td><td>${o.type}</td>
+          <td>${formatDate(o.time)}</td>
+          <td>
+            <select id="assign-${o.id}">
+              ${data.cleaners.map(c => `<option value="${c.id}">${c.name} (${c.skill})</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <button class="btn-small btn-success" onclick="assignOrder('${o.id}')">分配</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function addCleaner() {
+      const name = document.getElementById('cleaner-name').value.trim();
+      const phone = document.getElementById('cleaner-phone').value.trim();
+      const skill = document.getElementById('cleaner-skill').value;
+      if (!name || !phone) return alert('请填写完整信息');
+      data = await ipcRenderer.invoke('add-cleaner', { name, phone, skill });
+      document.getElementById('cleaner-name').value = '';
+      document.getElementById('cleaner-phone').value = '';
+      refreshAll();
+    }
+
+    async function addOrder() {
+      const customer = document.getElementById('order-customer').value.trim();
+      const phone = document.getElementById('order-phone').value.trim();
+      const address = document.getElementById('order-address').value.trim();
+      const type = document.getElementById('order-type').value;
+      const time = document.getElementById('order-time').value;
+      const duration = document.getElementById('order-duration').value;
+      const note = document.getElementById('order-note').value.trim();
+      if (!customer || !phone || !address || !time) return alert('请填写完整信息');
+      data = await ipcRenderer.invoke('add-order', { customer, phone, address, type, time, duration, note });
+      document.getElementById('order-customer').value = '';
+      document.getElementById('order-phone').value = '';
+      document.getElementById('order-address').value = '';
+      document.getElementById('order-note').value = '';
+      refreshAll();
+    }
+
+    async function assignOrder(orderId) {
+      const cleanerId = document.getElementById(`assign-${orderId}`).value;
+      data = await ipcRenderer.invoke('assign-order', { orderId, cleanerId });
+      refreshAll();
+    }
+
+    async function completeOrder(orderId) {
+      data = await ipcRenderer.invoke('complete-order', orderId);
+      refreshAll();
+    }
+
+    async function deleteCleaner(id) {
+      if (!confirm('确定删除该保洁员？')) return;
+      data = await ipcRenderer.invoke('delete-cleaner', id);
+      refreshAll();
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm('确定删除该订单？')) return;
+      data = await ipcRenderer.invoke('delete-order', id);
+      refreshAll();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
