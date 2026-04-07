@@ -1,14 +1,13 @@
 {
   "name": "cleaning-scheduler",
   "version": "1.0.0",
-  "description": "保洁公司调度系统",
-  "main": "main.js",
+  "description": "保洁员接单调度系统",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win",
-    "build:all": "electron-builder --win --mac --linux"
+    "build": "electron-builder --win --x64"
   },
-  "author": "OpenClaw",
+  "author": "AeroFish",
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.0.0",
@@ -21,23 +20,13 @@
       "output": "dist"
     },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        }
-      ]
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "保洁调度系统"
+      "createDesktopShortcut": true
     }
   }
 }
